@@ -120,7 +120,6 @@ export function ResortLiveMap({
         L.tileLayer(SKI_OVERLAY_URL, {
           attribution: SKI_OVERLAY_ATTRIBUTION,
           maxZoom: 19,
-          transparent: true,
           opacity: 0.95,
           zIndex: 500,
         }).addTo(map);
