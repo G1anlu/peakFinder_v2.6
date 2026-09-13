@@ -17,8 +17,8 @@ const escapeHtml = (s: string) =>
   );
 
 /**
- * Mappa interattiva dei comprensori su Leaflet con tile LocationIQ: un marker
- * per ogni località (base.lat/base.lng). Click ⇒ popup con nome, stato
+ * Mappa interattiva dei comprensori su Leaflet con base OpenTopoMap e overlay
+ * OpenSnowMap: un marker per ogni località. Click ⇒ popup con nome, stato
  * stagionale e link al dettaglio.
  */
 export function ResortMap({ resorts }: { resorts: Resort[] }) {
