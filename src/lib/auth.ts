@@ -55,10 +55,10 @@ export function authErrorMessage(err: unknown, mode: "login" | "signup"): string
   const m = raw.toLowerCase();
 
   if (m.includes("signups not allowed") || m.includes("signups are disabled")) {
-    return "Le registrazioni sono momentaneamente disattivate dall'amministratore. Prova ad accedere se hai già un account.";
+    return "Le registrazioni via email sono disattivate nel pannello Supabase.";
   }
   if (m.includes("user already registered") || m.includes("already been registered")) {
-    return "Esiste già un account con questa email: usa la pagina di accesso, non la registrazione.";
+    return "Un account con questa email esiste già. Prova ad accedere.";
   }
   if (m.includes("invalid login credentials")) {
     return "Email o password non valide.";

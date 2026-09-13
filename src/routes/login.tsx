@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Snowflake } from "lucide-react";
+import { Loader2, Snowflake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { AuthTabs } from "@/components/auth/AuthTabs";
 import { supabase } from "@/integrations/supabase/client";
 import {
   authSearchSchema,
@@ -137,6 +138,8 @@ function LoginPage() {
           Serve per salvare gli itinerari con hotel e noleggio.
         </p>
 
+        <AuthTabs active="login" next={destination} />
+
         <div className="mt-6 space-y-3">
           <div>
             <Label htmlFor="email" className="text-sm">
@@ -164,7 +167,8 @@ function LoginPage() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           {info && <p className="text-sm text-muted-foreground">{info}</p>}
           <Button className="w-full" onClick={submit} disabled={busy || !email || !password}>
-            Accedi
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            {busy ? "Accesso in corso…" : "Accedi"}
           </Button>
           <Button
             variant="secondary"

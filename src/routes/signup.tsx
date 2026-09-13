@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Snowflake } from "lucide-react";
+import { Loader2, Snowflake } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { AuthTabs } from "@/components/auth/AuthTabs";
 import { supabase } from "@/integrations/supabase/client";
 import {
   authSearchSchema,
@@ -40,6 +42,7 @@ export const Route = createFileRoute("/signup")({
 function SignupPage() {
   const navigate = useNavigate();
   const { next, redirectTo, returnUrl } = useSearch({ from: "/signup" });
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -84,6 +87,11 @@ function SignupPage() {
       return;
     }
 
+    const cleanUsername = username.trim();
+    if (cleanUsername.length < 3) {
+      setError("Scegli un nome utente di almeno 3 caratteri.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Le password inserite non coincidono");
@@ -95,14 +103,25 @@ function SignupPage() {
       const { error: err } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}${destination}` },
+        options: {
+          data: { username: cleanUsername },
+          emailRedirectTo: `${window.location.origin}${destination}`,
+        },
       });
-      if (err) throw err;
-      setInfo(
-        "Account creato. Controlla la tua email per confermare l'account, poi accedi.",
-      );
+      if (err) {
+        const msg = err.message.toLowerCase();
+        if (msg.includes("signups not allowed") || msg.includes("signups are disabled")) {
+          toast.error("Le registrazioni via email sono disattivate nel pannello Supabase.");
+        }
+        throw err;
+      }
       const { data } = await supabase.auth.getSession();
-      if (data.session) navigate({ href: destination });
+      if (data.session) {
+        // Conferma email non richiesta: accesso automatico e redirect.
+        navigate({ href: destination });
+      } else {
+        setInfo("Registrazione completata! Controlla la tua email per confermare l'account.");
+      }
     } catch (err) {
       setError(authErrorMessage(err, "signup"));
     } finally {
@@ -124,7 +143,22 @@ function SignupPage() {
           Serve per salvare gli itinerari con hotel e noleggio.
         </p>
 
+        <AuthTabs active="signup" next={destination} />
+
         <div className="mt-6 space-y-3">
+          <div>
+            <Label htmlFor="username" className="text-sm">
+              Nome utente
+            </Label>
+            <Input
+              id="username"
+              type="text"
+              autoComplete="username"
+              className="mt-1"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
           <div>
             <Label htmlFor="email" className="text-sm">
               Email
@@ -183,9 +217,12 @@ function SignupPage() {
           <Button
             className="w-full"
             onClick={submit}
-            disabled={busy || !email || !password || !confirmPassword || !accepted}
+            disabled={
+              busy || !username.trim() || !email || !password || !confirmPassword || !accepted
+            }
           >
-            Registrati
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            {busy ? "Registrazione in corso…" : "Registrati"}
           </Button>
           <Link
             to="/login"
