@@ -77,6 +77,57 @@ export type Database = {
         }
         Relationships: []
       }
+      gps_tracks: {
+        Row: {
+          altitude: number | null
+          id: string
+          is_downhill: boolean
+          latitude: number
+          longitude: number
+          pvp_id: string | null
+          recorded_at: string
+          speed: number | null
+          user_id: string | null
+        }
+        Insert: {
+          altitude?: number | null
+          id?: string
+          is_downhill?: boolean
+          latitude: number
+          longitude: number
+          pvp_id?: string | null
+          recorded_at?: string
+          speed?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          altitude?: number | null
+          id?: string
+          is_downhill?: boolean
+          latitude?: number
+          longitude?: number
+          pvp_id?: string | null
+          recorded_at?: string
+          speed?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_tracks_pvp_id_fkey"
+            columns: ["pvp_id"]
+            isOneToOne: false
+            referencedRelation: "pvp_duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_tracks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hotel_search_cache: {
         Row: {
           checkin_date: string
@@ -189,10 +240,14 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          coins: number
           created_at: string
+          elo_rating: number
           email: string | null
           id: string
           onboarding_completed: boolean
+          pvp_losses: number
+          pvp_wins: number
           ski_level: string
           updated_at: string
           username: string | null
@@ -201,10 +256,14 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          coins?: number
           created_at?: string
+          elo_rating?: number
           email?: string | null
           id: string
           onboarding_completed?: boolean
+          pvp_losses?: number
+          pvp_wins?: number
           ski_level?: string
           updated_at?: string
           username?: string | null
@@ -213,16 +272,93 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          coins?: number
           created_at?: string
+          elo_rating?: number
           email?: string | null
           id?: string
           onboarding_completed?: boolean
+          pvp_losses?: number
+          pvp_wins?: number
           ski_level?: string
           updated_at?: string
           username?: string | null
           visited_resorts?: string[]
         }
         Relationships: []
+      }
+      pvp_duels: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          player_1_id?: string | null
+          player_1_km?: number
+          player_1_lifts?: number
+          player_1_score?: number
+          player_2_id?: string | null
+          player_2_km?: number
+          player_2_lifts?: number
+          player_2_score?: number
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          player_1_id?: string | null
+          player_1_km?: number
+          player_1_lifts?: number
+          player_1_score?: number
+          player_2_id?: string | null
+          player_2_km?: number
+          player_2_lifts?: number
+          player_2_score?: number
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pvp_duels_player_1_id_fkey"
+            columns: ["player_1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pvp_duels_player_2_id_fkey"
+            columns: ["player_2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pvp_duels_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resort_cache: {
         Row: {
@@ -317,6 +453,81 @@ export type Database = {
           username: string
           visited_resorts: string[]
         }[]
+      }
+      pvp_finalize: {
+        Args: { _duel_id: string }
+        Returns: {
+          created_at: string
+          date: string
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_duels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      pvp_join_duel: {
+        Args: never
+        Returns: {
+          created_at: string
+          date: string
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_duels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      pvp_update_progress: {
+        Args: { _duel_id: string; _km: number; _lifts: number; _score: number }
+        Returns: {
+          created_at: string
+          date: string
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_duels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       remove_friend: { Args: { friend_user_id: string }; Returns: undefined }
       search_users: {
