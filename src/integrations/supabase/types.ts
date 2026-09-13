@@ -527,6 +527,7 @@ export type Database = {
         Returns: {
           avatar_url: string
           bio: string
+          elo_rating: number
           id: string
           is_friend: boolean
           ski_level: string
@@ -639,6 +640,7 @@ export type Database = {
         Args: { _q: string }
         Returns: {
           avatar_url: string
+          elo_rating: number
           id: string
           username: string
         }[]
