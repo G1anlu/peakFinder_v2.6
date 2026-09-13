@@ -55,13 +55,13 @@ export function authErrorMessage(err: unknown, mode: "login" | "signup"): string
   const m = raw.toLowerCase();
 
   if (m.includes("signups not allowed") || m.includes("signups are disabled")) {
-    return "La registrazione via email è attualmente disattivata. Utilizza il login o un provider social.";
+    return "Le registrazioni sono momentaneamente disattivate dall'amministratore. Prova ad accedere se hai già un account.";
   }
   if (m.includes("user already registered") || m.includes("already been registered")) {
     return "Esiste già un account con questa email: usa la pagina di accesso, non la registrazione.";
   }
   if (m.includes("invalid login credentials")) {
-    return "Email o password non corretti. Se non hai ancora un account, registrati.";
+    return "Email o password non valide.";
   }
   if (m.includes("email not confirmed")) {
     return "Devi prima confermare l'email: apri il link che ti abbiamo inviato.";
