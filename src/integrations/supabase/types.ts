@@ -568,6 +568,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      pvp_close_stale_duels: { Args: never; Returns: number }
       pvp_finalize: {
         Args: { _duel_id: string }
         Returns: {
