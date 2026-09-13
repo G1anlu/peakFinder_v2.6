@@ -10,33 +10,280 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
+import { Route as CreaItinerarioRouteImport } from './routes/crea-itinerario'
+import { Route as EsploraRouteImport } from './routes/esplora'
+import { Route as ItinerarioRouteImport } from './routes/itinerario'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfiloRouteImport } from './routes/profilo'
+import { Route as PvpRouteImport } from './routes/pvp'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RisultatiRouteImport } from './routes/risultati'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ApiItinerariesRouteImport } from './routes/api/itineraries'
+import { Route as EsploraIndexRouteImport } from './routes/esplora.index'
+import { Route as EsploraSlugRouteImport } from './routes/esplora.$slug'
+import { Route as LocalitaSlugRouteImport } from './routes/localita.$slug'
+import { Route as ApiHotelsRapidapiRouteImport } from './routes/api/hotels/rapidapi'
+import { Route as ApiLocationiqNearbyRouteImport } from './routes/api/locationiq/nearby'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiePolicyRoute = CookiePolicyRouteImport.update({
+  id: '/cookie-policy',
+  path: '/cookie-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreaItinerarioRoute = CreaItinerarioRouteImport.update({
+  id: '/crea-itinerario',
+  path: '/crea-itinerario',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EsploraRoute = EsploraRouteImport.update({
+  id: '/esplora',
+  path: '/esplora',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItinerarioRoute = ItinerarioRouteImport.update({
+  id: '/itinerario',
+  path: '/itinerario',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfiloRoute = ProfiloRouteImport.update({
+  id: '/profilo',
+  path: '/profilo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PvpRoute = PvpRouteImport.update({
+  id: '/pvp',
+  path: '/pvp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RisultatiRoute = RisultatiRouteImport.update({
+  id: '/risultati',
+  path: '/risultati',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiItinerariesRoute = ApiItinerariesRouteImport.update({
+  id: '/api/itineraries',
+  path: '/api/itineraries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EsploraIndexRoute = EsploraIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EsploraRoute,
+} as any)
+const EsploraSlugRoute = EsploraSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => EsploraRoute,
+} as any)
+const LocalitaSlugRoute = LocalitaSlugRouteImport.update({
+  id: '/localita/$slug',
+  path: '/localita/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHotelsRapidapiRoute = ApiHotelsRapidapiRouteImport.update({
+  id: '/api/hotels/rapidapi',
+  path: '/api/hotels/rapidapi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLocationiqNearbyRoute = ApiLocationiqNearbyRouteImport.update({
+  id: '/api/locationiq/nearby',
+  path: '/api/locationiq/nearby',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/cookie-policy': typeof CookiePolicyRoute
+  '/crea-itinerario': typeof CreaItinerarioRoute
+  '/esplora': typeof EsploraRouteWithChildren
+  '/itinerario': typeof ItinerarioRoute
+  '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/profilo': typeof ProfiloRoute
+  '/pvp': typeof PvpRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/risultati': typeof RisultatiRoute
+  '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
+  '/api/itineraries': typeof ApiItinerariesRoute
+  '/esplora/$slug': typeof EsploraSlugRoute
+  '/localita/$slug': typeof LocalitaSlugRoute
+  '/esplora/': typeof EsploraIndexRoute
+  '/api/hotels/rapidapi': typeof ApiHotelsRapidapiRoute
+  '/api/locationiq/nearby': typeof ApiLocationiqNearbyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/cookie-policy': typeof CookiePolicyRoute
+  '/crea-itinerario': typeof CreaItinerarioRoute
+  '/itinerario': typeof ItinerarioRoute
+  '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/profilo': typeof ProfiloRoute
+  '/pvp': typeof PvpRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/risultati': typeof RisultatiRoute
+  '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
+  '/api/itineraries': typeof ApiItinerariesRoute
+  '/esplora/$slug': typeof EsploraSlugRoute
+  '/localita/$slug': typeof LocalitaSlugRoute
+  '/esplora': typeof EsploraIndexRoute
+  '/api/hotels/rapidapi': typeof ApiHotelsRapidapiRoute
+  '/api/locationiq/nearby': typeof ApiLocationiqNearbyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/cookie-policy': typeof CookiePolicyRoute
+  '/crea-itinerario': typeof CreaItinerarioRoute
+  '/esplora': typeof EsploraRouteWithChildren
+  '/itinerario': typeof ItinerarioRoute
+  '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/profilo': typeof ProfiloRoute
+  '/pvp': typeof PvpRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/risultati': typeof RisultatiRoute
+  '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
+  '/api/itineraries': typeof ApiItinerariesRoute
+  '/esplora/$slug': typeof EsploraSlugRoute
+  '/localita/$slug': typeof LocalitaSlugRoute
+  '/esplora/': typeof EsploraIndexRoute
+  '/api/hotels/rapidapi': typeof ApiHotelsRapidapiRoute
+  '/api/locationiq/nearby': typeof ApiLocationiqNearbyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/cookie-policy'
+    | '/crea-itinerario'
+    | '/esplora'
+    | '/itinerario'
+    | '/login'
+    | '/privacy'
+    | '/profilo'
+    | '/pvp'
+    | '/reset-password'
+    | '/risultati'
+    | '/signup'
+    | '/terms'
+    | '/api/itineraries'
+    | '/esplora/$slug'
+    | '/localita/$slug'
+    | '/esplora/'
+    | '/api/hotels/rapidapi'
+    | '/api/locationiq/nearby'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/cookie-policy'
+    | '/crea-itinerario'
+    | '/itinerario'
+    | '/login'
+    | '/privacy'
+    | '/profilo'
+    | '/pvp'
+    | '/reset-password'
+    | '/risultati'
+    | '/signup'
+    | '/terms'
+    | '/api/itineraries'
+    | '/esplora/$slug'
+    | '/localita/$slug'
+    | '/esplora'
+    | '/api/hotels/rapidapi'
+    | '/api/locationiq/nearby'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/cookie-policy'
+    | '/crea-itinerario'
+    | '/esplora'
+    | '/itinerario'
+    | '/login'
+    | '/privacy'
+    | '/profilo'
+    | '/pvp'
+    | '/reset-password'
+    | '/risultati'
+    | '/signup'
+    | '/terms'
+    | '/api/itineraries'
+    | '/esplora/$slug'
+    | '/localita/$slug'
+    | '/esplora/'
+    | '/api/hotels/rapidapi'
+    | '/api/locationiq/nearby'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  CookiePolicyRoute: typeof CookiePolicyRoute
+  CreaItinerarioRoute: typeof CreaItinerarioRoute
+  EsploraRoute: typeof EsploraRouteWithChildren
+  ItinerarioRoute: typeof ItinerarioRoute
+  LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProfiloRoute: typeof ProfiloRoute
+  PvpRoute: typeof PvpRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  RisultatiRoute: typeof RisultatiRoute
+  SignupRoute: typeof SignupRoute
+  TermsRoute: typeof TermsRoute
+  ApiItinerariesRoute: typeof ApiItinerariesRoute
+  LocalitaSlugRoute: typeof LocalitaSlugRoute
+  ApiHotelsRapidapiRoute: typeof ApiHotelsRapidapiRoute
+  ApiLocationiqNearbyRoute: typeof ApiLocationiqNearbyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +295,174 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookie-policy': {
+      id: '/cookie-policy'
+      path: '/cookie-policy'
+      fullPath: '/cookie-policy'
+      preLoaderRoute: typeof CookiePolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crea-itinerario': {
+      id: '/crea-itinerario'
+      path: '/crea-itinerario'
+      fullPath: '/crea-itinerario'
+      preLoaderRoute: typeof CreaItinerarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/esplora': {
+      id: '/esplora'
+      path: '/esplora'
+      fullPath: '/esplora'
+      preLoaderRoute: typeof EsploraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/itinerario': {
+      id: '/itinerario'
+      path: '/itinerario'
+      fullPath: '/itinerario'
+      preLoaderRoute: typeof ItinerarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profilo': {
+      id: '/profilo'
+      path: '/profilo'
+      fullPath: '/profilo'
+      preLoaderRoute: typeof ProfiloRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pvp': {
+      id: '/pvp'
+      path: '/pvp'
+      fullPath: '/pvp'
+      preLoaderRoute: typeof PvpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/risultati': {
+      id: '/risultati'
+      path: '/risultati'
+      fullPath: '/risultati'
+      preLoaderRoute: typeof RisultatiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/itineraries': {
+      id: '/api/itineraries'
+      path: '/api/itineraries'
+      fullPath: '/api/itineraries'
+      preLoaderRoute: typeof ApiItinerariesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/esplora/': {
+      id: '/esplora/'
+      path: '/'
+      fullPath: '/esplora/'
+      preLoaderRoute: typeof EsploraIndexRouteImport
+      parentRoute: typeof EsploraRoute
+    }
+    '/esplora/$slug': {
+      id: '/esplora/$slug'
+      path: '/$slug'
+      fullPath: '/esplora/$slug'
+      preLoaderRoute: typeof EsploraSlugRouteImport
+      parentRoute: typeof EsploraRoute
+    }
+    '/localita/$slug': {
+      id: '/localita/$slug'
+      path: '/localita/$slug'
+      fullPath: '/localita/$slug'
+      preLoaderRoute: typeof LocalitaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/hotels/rapidapi': {
+      id: '/api/hotels/rapidapi'
+      path: '/api/hotels/rapidapi'
+      fullPath: '/api/hotels/rapidapi'
+      preLoaderRoute: typeof ApiHotelsRapidapiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/locationiq/nearby': {
+      id: '/api/locationiq/nearby'
+      path: '/api/locationiq/nearby'
+      fullPath: '/api/locationiq/nearby'
+      preLoaderRoute: typeof ApiLocationiqNearbyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface EsploraRouteChildren {
+  EsploraSlugRoute: typeof EsploraSlugRoute
+  EsploraIndexRoute: typeof EsploraIndexRoute
+}
+
+const EsploraRouteChildren: EsploraRouteChildren = {
+  EsploraSlugRoute: EsploraSlugRoute,
+  EsploraIndexRoute: EsploraIndexRoute,
+}
+
+const EsploraRouteWithChildren =
+  EsploraRoute._addFileChildren(EsploraRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  CookiePolicyRoute: CookiePolicyRoute,
+  CreaItinerarioRoute: CreaItinerarioRoute,
+  EsploraRoute: EsploraRouteWithChildren,
+  ItinerarioRoute: ItinerarioRoute,
+  LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProfiloRoute: ProfiloRoute,
+  PvpRoute: PvpRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  RisultatiRoute: RisultatiRoute,
+  SignupRoute: SignupRoute,
+  TermsRoute: TermsRoute,
+  ApiItinerariesRoute: ApiItinerariesRoute,
+  LocalitaSlugRoute: LocalitaSlugRoute,
+  ApiHotelsRapidapiRoute: ApiHotelsRapidapiRoute,
+  ApiLocationiqNearbyRoute: ApiLocationiqNearbyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
