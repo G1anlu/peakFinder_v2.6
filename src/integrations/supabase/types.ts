@@ -236,6 +236,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lifts: {
+        Row: {
+          created_at: string
+          id: number
+          name: string | null
+          resort_name: string | null
+          status: string
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: number
+          name?: string | null
+          resort_name?: string | null
+          status?: string
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          resort_name?: string | null
+          status?: string
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -435,12 +465,62 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_lift_bonuses: {
+        Row: {
+          claimed_at: string
+          coins_awarded: number
+          date: string
+          id: string
+          lift_id: number
+          lift_name: string | null
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          coins_awarded?: number
+          date?: string
+          id?: string
+          lift_id: number
+          lift_name?: string | null
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          coins_awarded?: number
+          date?: string
+          id?: string
+          lift_id?: number
+          lift_name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_lift_bonuses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      add_user_coins: {
+        Args: { _amount: number; _user_id: string }
+        Returns: number
+      }
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
+      claim_lift_bonus: {
+        Args: { _coins?: number; _lift_id: number; _lift_name?: string }
+        Returns: {
+          awarded: boolean
+          coins: number
+          lift_name: string
+        }[]
+      }
       delete_own_account: { Args: never; Returns: undefined }
       public_profile: {
         Args: { _id: string }
@@ -455,6 +535,31 @@ export type Database = {
         }[]
       }
       pvp_finalize: {
+        Args: { _duel_id: string }
+        Returns: {
+          created_at: string
+          date: string
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_duels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      pvp_forfeit: {
         Args: { _duel_id: string }
         Returns: {
           created_at: string
