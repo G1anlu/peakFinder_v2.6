@@ -119,15 +119,18 @@ export function ResortLiveMap({
         }).addTo(map);
         L.tileLayer(SKI_OVERLAY_URL, {
           attribution: SKI_OVERLAY_ATTRIBUTION,
-          maxZoom: 18,
-          opacity: 0.9,
-}).addTo(map);
+          maxZoom: 19,
+          transparent: true,
+          opacity: 0.95,
+          zIndex: 500,
+        }).addTo(map);
         leafletRef.current = L;
         mapRef.current = map;
         pisteRef.current = L.layerGroup().addTo(map);
         layerRef.current = L.layerGroup().addTo(map);
         trackRef.current = L.layerGroup().addTo(map);
         meRef.current = L.layerGroup().addTo(map);
+        requestAnimationFrame(() => map.invalidateSize());
         setReady(true);
       } catch {
         if (!cancelled) setError("Mappa non disponibile al momento.");

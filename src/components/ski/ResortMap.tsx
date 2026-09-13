@@ -4,11 +4,12 @@ import type { Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Resort } from "@/lib/ski/types";
 import { resortSeason } from "@/lib/ski/season";
-import {
-  LOCATIONIQ_ATTRIBUTION,
-  LOCATIONIQ_MAX_ZOOM,
-  LOCATIONIQ_TILE_URL,
-} from "@/lib/ski/locationiq";
+
+const TOPO_TILE_URL = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+const TOPO_ATTRIBUTION =
+  '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA) · &copy; OpenStreetMap';
+const SKI_OVERLAY_URL = "https://tiles.opensnowmap.org/lines/{z}/{x}/{y}.png";
+const SKI_OVERLAY_ATTRIBUTION = '&copy; <a href="https://www.opensnowmap.org">OpenSnowMap</a>';
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) =>
@@ -57,11 +58,19 @@ export function ResortMap({ resorts }: { resorts: Resort[] }) {
           zoom: 6,
           scrollWheelZoom: false,
         });
-        L.tileLayer(LOCATIONIQ_TILE_URL, {
-          attribution: LOCATIONIQ_ATTRIBUTION,
-          maxZoom: LOCATIONIQ_MAX_ZOOM,
+        L.tileLayer(TOPO_TILE_URL, {
+          attribution: TOPO_ATTRIBUTION,
+          maxZoom: 17,
+        }).addTo(map);
+        L.tileLayer(SKI_OVERLAY_URL, {
+          attribution: SKI_OVERLAY_ATTRIBUTION,
+          maxZoom: 19,
+          transparent: true,
+          opacity: 0.95,
+          zIndex: 500,
         }).addTo(map);
         mapRef.current = map;
+        requestAnimationFrame(() => map.invalidateSize());
         setReady(true);
       } catch {
         if (!cancelled) setError("Mappa non disponibile al momento.");
