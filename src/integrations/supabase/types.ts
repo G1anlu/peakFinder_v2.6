@@ -77,6 +77,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hotel_search_cache: {
+        Row: {
+          checkin_date: string
+          checkout_date: string
+          created_at: string
+          guests: number
+          id: string
+          location_query: string
+          response_data: Json
+        }
+        Insert: {
+          checkin_date: string
+          checkout_date: string
+          created_at?: string
+          guests?: number
+          id?: string
+          location_query: string
+          response_data: Json
+        }
+        Update: {
+          checkin_date?: string
+          checkout_date?: string
+          created_at?: string
+          guests?: number
+          id?: string
+          location_query?: string
+          response_data?: Json
+        }
+        Relationships: []
+      }
       itineraries: {
         Row: {
           cost_breakdown: Json | null
@@ -233,12 +263,49 @@ export type Database = {
         }
         Relationships: []
       }
+      ski_rentals: {
+        Row: {
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          places: Json
+          radius_m: number
+          resort_key: string
+          resort_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          places: Json
+          radius_m?: number
+          resort_key: string
+          resort_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          places?: Json
+          radius_m?: number
+          resort_key?: string
+          resort_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
+      delete_own_account: { Args: never; Returns: undefined }
       public_profile: {
         Args: { _id: string }
         Returns: {
@@ -251,6 +318,7 @@ export type Database = {
           visited_resorts: string[]
         }[]
       }
+      remove_friend: { Args: { friend_user_id: string }; Returns: undefined }
       search_users: {
         Args: { _q: string }
         Returns: {
