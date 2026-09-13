@@ -266,6 +266,42 @@ export type Database = {
         }
         Relationships: []
       }
+      news: {
+        Row: {
+          abstract: string
+          article_url: string
+          created_at: string
+          id: string
+          image_url: string | null
+          published_at: string
+          resorts: string[]
+          source: string
+          title: string
+        }
+        Insert: {
+          abstract?: string
+          article_url: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          resorts?: string[]
+          source?: string
+          title: string
+        }
+        Update: {
+          abstract?: string
+          article_url?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          resorts?: string[]
+          source?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
