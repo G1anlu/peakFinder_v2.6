@@ -321,6 +321,7 @@ export type Database = {
         Row: {
           created_at: string
           date: string
+          ended_at: string | null
           id: string
           player_1_id: string | null
           player_1_km: number
@@ -330,6 +331,7 @@ export type Database = {
           player_2_km: number
           player_2_lifts: number
           player_2_score: number
+          start_time: string | null
           status: string
           updated_at: string
           winner_id: string | null
@@ -337,6 +339,7 @@ export type Database = {
         Insert: {
           created_at?: string
           date?: string
+          ended_at?: string | null
           id?: string
           player_1_id?: string | null
           player_1_km?: number
@@ -346,6 +349,7 @@ export type Database = {
           player_2_km?: number
           player_2_lifts?: number
           player_2_score?: number
+          start_time?: string | null
           status?: string
           updated_at?: string
           winner_id?: string | null
@@ -353,6 +357,7 @@ export type Database = {
         Update: {
           created_at?: string
           date?: string
+          ended_at?: string | null
           id?: string
           player_1_id?: string | null
           player_1_km?: number
@@ -362,6 +367,7 @@ export type Database = {
           player_2_km?: number
           player_2_lifts?: number
           player_2_score?: number
+          start_time?: string | null
           status?: string
           updated_at?: string
           winner_id?: string | null
@@ -535,11 +541,12 @@ export type Database = {
           visited_resorts: string[]
         }[]
       }
-      pvp_finalize: {
+      pvp_cancel_duel: {
         Args: { _duel_id: string }
         Returns: {
           created_at: string
           date: string
+          ended_at: string | null
           id: string
           player_1_id: string | null
           player_1_km: number
@@ -549,6 +556,61 @@ export type Database = {
           player_2_km: number
           player_2_lifts: number
           player_2_score: number
+          start_time: string | null
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_duels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      pvp_finalize: {
+        Args: { _duel_id: string }
+        Returns: {
+          created_at: string
+          date: string
+          ended_at: string | null
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          start_time: string | null
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pvp_duels"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      pvp_finish_duel: {
+        Args: { _duel_id: string }
+        Returns: {
+          created_at: string
+          date: string
+          ended_at: string | null
+          id: string
+          player_1_id: string | null
+          player_1_km: number
+          player_1_lifts: number
+          player_1_score: number
+          player_2_id: string | null
+          player_2_km: number
+          player_2_lifts: number
+          player_2_score: number
+          start_time: string | null
           status: string
           updated_at: string
           winner_id: string | null
@@ -565,6 +627,7 @@ export type Database = {
         Returns: {
           created_at: string
           date: string
+          ended_at: string | null
           id: string
           player_1_id: string | null
           player_1_km: number
@@ -574,6 +637,7 @@ export type Database = {
           player_2_km: number
           player_2_lifts: number
           player_2_score: number
+          start_time: string | null
           status: string
           updated_at: string
           winner_id: string | null
@@ -590,6 +654,7 @@ export type Database = {
         Returns: {
           created_at: string
           date: string
+          ended_at: string | null
           id: string
           player_1_id: string | null
           player_1_km: number
@@ -599,6 +664,7 @@ export type Database = {
           player_2_km: number
           player_2_lifts: number
           player_2_score: number
+          start_time: string | null
           status: string
           updated_at: string
           winner_id: string | null
@@ -615,6 +681,7 @@ export type Database = {
         Returns: {
           created_at: string
           date: string
+          ended_at: string | null
           id: string
           player_1_id: string | null
           player_1_km: number
@@ -624,6 +691,7 @@ export type Database = {
           player_2_km: number
           player_2_lifts: number
           player_2_score: number
+          start_time: string | null
           status: string
           updated_at: string
           winner_id: string | null
