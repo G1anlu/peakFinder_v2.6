@@ -174,7 +174,44 @@ export class GpsTracker {
   private maxSpeed = 0;
   private descentM = 0;
 
+  /** Diventa true al primo punto ad alta precisione: da lì il fix rapido non serve più. */
+  private hasPreciseFix = false;
+
   constructor(private readonly options: GpsTrackerOptions) {}
+
+  /**
+   * Posizione veloce iniziale: bassa precisione, timeout 3s e cache di 60s,
+   * così la mappa si posiziona subito mentre parte il GPS ad alta precisione.
+   */
+  private async quickFix() {
+    const emit = (lat: number, lng: number) => {
+      if (this.hasPreciseFix) return;
+      this.options.onQuickFix?.({ lat, lng });
+    };
+    try {
+      if (isNativeApp()) {
+        const { Geolocation } = await import("@capacitor/geolocation");
+        const pos = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          timeout: 3000,
+          maximumAge: 60000,
+        });
+        emit(pos.coords.latitude, pos.coords.longitude);
+        return;
+      }
+      if (typeof navigator !== "undefined" && "geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => emit(pos.coords.latitude, pos.coords.longitude),
+          () => {
+            /* il fix rapido è best effort */
+          },
+          { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 },
+        );
+      }
+    } catch {
+      /* il fix rapido è best effort */
+    }
+  }
 
   /** Aggiunge Punti Sfida (bonus raccolto sulla mappa). */
   addBonusPoints(points: number = BONUS_CHALLENGE_POINTS) {
