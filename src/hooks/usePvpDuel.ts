@@ -370,11 +370,23 @@ export function usePvpDuel(enabled: boolean) {
     releaseWakeLock();
   }, [releaseWakeLock]);
 
+  /**
+   * Avvio della Sfida PvP: SOLO dal click esplicito sul pulsante.
+   * Prima di partire verifica che la posizione sia utilizzabile
+   * (nell'app installata serve il permesso "Sempre attiva").
+   */
   const enterDuel = useCallback(async () => {
+    if (joiningRef.current) return;
+    joiningRef.current = true;
     setBusy(true);
     setError(null);
     setSearchExpired(false);
     try {
+      const perm = await checkChallengeLocation();
+      if (!perm.ok) {
+        setError(perm.reason ?? ALWAYS_ON_GPS_MESSAGE);
+        return;
+      }
       void askNotificationPermission();
       const res = await join({ data: undefined });
       setDuel(res.duel);
