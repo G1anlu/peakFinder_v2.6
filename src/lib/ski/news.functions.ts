@@ -291,7 +291,7 @@ async function newsForResort(resortName: string): Promise<SkiNewsItem[]> {
       abstract: item.abstract.replace(/\s*&nbsp;\s*/g, " ").slice(0, 220),
       resorts: [resortName],
     };
-  });
+  }).filter(isMountainNews);
 
   items.sort(byDateDesc);
   resortCache.set(key, { at: Date.now(), items });
