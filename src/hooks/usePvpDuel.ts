@@ -279,6 +279,8 @@ export function usePvpDuel(enabled: boolean) {
     const tracker = new GpsTracker({
       onStats: setGps,
       onError: (m) => setError(m),
+      // Posizione approssimata immediata: la mappa si centra senza attese.
+      onQuickFix: (pos) => setPosition((prev) => prev ?? pos),
       onPoint: (point) => {
         setPosition({ lat: point.latitude, lng: point.longitude });
         setGpsPositions((prev) => [...prev, [point.latitude, point.longitude]]);
