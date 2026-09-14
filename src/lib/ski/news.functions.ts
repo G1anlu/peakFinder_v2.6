@@ -50,24 +50,71 @@ const FEEDS: Array<{ source: string; url: string; topic?: boolean }> = [
 
 const TOPIC_WORDS = [
   "neve",
+  "nevicat",
   "sci",
   "sciat",
+  "snowboard",
   "montagna",
   "alpi",
+  "alpin",
   "dolomiti",
   "appennin",
   "comprensor",
   "impianti di risalita",
+  "apertura impianti",
   "funivia",
   "seggiovia",
+  "cabinovia",
   "skipass",
   "valanga",
+  "valanghe",
+  "slavina",
   "ghiacciai",
+  "ghiacciaio",
   "rifugio",
+  "bollettino",
+  "innevament",
+  "scialpinis",
+  "soccorso alpino",
+  "vetta",
+  "piste da sci",
 ];
 
-const isMountainNews = (item: SkiNewsItem) =>
-  TOPIC_WORDS.some((w) => `${item.title} ${item.abstract}`.toLowerCase().includes(w));
+/** Cronaca generale e politica: fuori tema. */
+const OFF_TOPIC_WORDS = [
+  "governo",
+  "parlament",
+  "senato",
+  "elezion",
+  "premier",
+  "ministro",
+  "partito",
+  "manovra",
+  "sindaco",
+  "processo",
+  "omicid",
+  "femminicid",
+  "rapina",
+  "arrestat",
+  "droga",
+  "calciomercato",
+  "serie a",
+  "borsa",
+  "guerra",
+  "gaza",
+  "ucraina",
+  "putin",
+  "trump",
+  "meloni",
+  "vaticano",
+  "sanremo",
+];
+
+const isMountainNews = (item: SkiNewsItem) => {
+  const hay = `${item.title} ${item.abstract}`.toLowerCase();
+  if (OFF_TOPIC_WORDS.some((w) => hay.includes(w))) return false;
+  return TOPIC_WORDS.some((w) => hay.includes(w));
+};
 
 
 export interface SkiNewsItem {
