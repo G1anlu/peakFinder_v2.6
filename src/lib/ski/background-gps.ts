@@ -1,17 +1,9 @@
 import { Capacitor } from "@capacitor/core";
 import type { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 
-/**
- * Tracciamento GPS in background (solo app nativa Capacitor).
- *
- * Sul web resta attivo il watcher del browser: il plugin nativo serve a
- * continuare a registrare posizioni, km e velocità anche a schermo spento,
- * con la notifica di sistema del servizio in primo piano.
- */
-
 export type GpsPermission = "granted" | "denied" | "prompt" | "unsupported";
 
-export const isNativeApp = () => {
+export const isNativeApp = (): boolean => {
   try {
     return Capacitor.isNativePlatform();
   } catch {
@@ -19,27 +11,41 @@ export const isNativeApp = () => {
   }
 };
 
-/** Chiede subito il permesso di posizione (nativo o browser). */
+/**
+ * Chiede i permessi GPS completi (incluso il background se nativo).
+ */
 export async function requestGpsPermission(): Promise<GpsPermission> {
   if (isNativeApp()) {
     try {
       const { Geolocation } = await import("@capacitor/geolocation");
-      const res = await Geolocation.requestPermissions();
-      const state = res.location;
-      if (state === "granted") return "granted";
-      if (state === "denied") return "denied";
-      return "prompt";
+      
+      // Request Foreground permission first
+      let status = await Geolocation.requestPermissions();
+      if (status.location !== "granted") return "denied";
+
+      // Request Background permission if native Android/iOS
+      if (Capacitor.getPlatform() === "android" || Capacitor.getPlatform() === "ios") {
+        const bgStatus = await Geolocation.checkPermissions();
+        if (bgStatus.coarseLocation === "denied" || bgStatus.location === "denied") {
+          return "denied";
+        }
+      }
+
+      return "granted";
     } catch {
       return "unsupported";
     }
   }
 
-  if (typeof navigator === "undefined" || !("geolocation" in navigator)) return "unsupported";
-  return await new Promise<GpsPermission>((resolve) => {
+  if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+    return "unsupported";
+  }
+
+  return new Promise<GpsPermission>((resolve) => {
     navigator.geolocation.getCurrentPosition(
       () => resolve("granted"),
       (err) => resolve(err.code === err.PERMISSION_DENIED ? "denied" : "prompt"),
-      { enableHighAccuracy: true, timeout: 15000 },
+      { enableHighAccuracy: true, timeout: 15000 }
     );
   });
 }
@@ -59,30 +65,25 @@ export interface BackgroundWatcher {
 
 /**
  * Avvia il servizio nativo di tracciamento in background.
- * Restituisce null quando non siamo nell'app nativa.
  */
 export async function startBackgroundTracking(handlers: {
   onPoint: (point: BackgroundPoint) => void;
   onError?: (message: string) => void;
 }): Promise<BackgroundWatcher | null> {
   if (!isNativeApp()) return null;
+
   try {
     const { registerPlugin } = await import("@capacitor/core");
     const BackgroundGeolocation =
       registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
+
     const watcherId = await BackgroundGeolocation.addWatcher(
       {
         backgroundMessage: "Tracciamento discesa in corso...",
         backgroundTitle: "PeakFinder PvP",
         requestPermissions: true,
         stale: false,
-        // Alta reattività in pista: un punto ogni 3 metri, fino a 2 al secondo.
-        distanceFilter: 3,
-        ...({
-          enableHighAccuracy: true,
-          interval: 1000,
-          fastestInterval: 500,
-        } as Record<string, unknown>),
+        distanceFilter: 3, // Invia un punto ogni 3 metri
       },
       (location, error) => {
         if (error) {
@@ -90,6 +91,7 @@ export async function startBackgroundTracking(handlers: {
           return;
         }
         if (!location) return;
+
         handlers.onPoint({
           latitude: location.latitude,
           longitude: location.longitude,
@@ -98,18 +100,19 @@ export async function startBackgroundTracking(handlers: {
           accuracy: location.accuracy ?? null,
           time: location.time ?? null,
         });
-      },
+      }
     );
+
     return {
       stop: async () => {
         try {
           await BackgroundGeolocation.removeWatcher({ id: watcherId });
         } catch {
-          /* watcher già chiuso */
+          /* watcher già rimosso */
         }
       },
     };
-  } catch {
+  } catch (err) {
     handlers.onError?.("Tracciamento in background non disponibile su questo dispositivo.");
     return null;
   }
