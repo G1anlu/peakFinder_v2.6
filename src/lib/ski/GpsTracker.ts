@@ -49,6 +49,8 @@ export interface LiftGeometry {
 export interface GpsTrackerOptions {
   onStats: (stats: GpsStats) => void;
   onPoint?: (point: GpsPoint) => void;
+  /** Posizione approssimata immediata (rete/celle) per centrare subito la mappa. */
+  onQuickFix?: (position: { lat: number; lng: number }) => void;
   onError?: (message: string) => void;
 }
 
