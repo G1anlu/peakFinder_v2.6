@@ -229,7 +229,8 @@ export async function collectFeedArticles(): Promise<FeedArticle[]> {
     NEWS_FEEDS.map(async (f) => {
       const xml = await fetchText(f.url);
       const parsed = xml ? parseFeed(xml, f.source) : [];
-      return f.topic ? parsed.filter(isMountain) : parsed;
+      // Filtro montagna su TUTTE le fonti: niente cronaca generale o politica.
+      return parsed.filter(isMountain);
     }),
   );
 
