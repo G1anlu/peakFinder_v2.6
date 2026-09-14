@@ -206,7 +206,8 @@ export const fetchSkiNews = createServerFn({ method: "GET" }).handler(async () =
     FEEDS.map(async (f) => {
       const xml = await fetchText(f.url);
       const parsed = xml ? parseFeed(xml, f.source) : [];
-      return f.topic ? parsed.filter(isMountainNews) : parsed;
+      // Filtro montagna su tutte le fonti: niente cronaca generale o politica.
+      return parsed.filter(isMountainNews);
 
     }),
   );
