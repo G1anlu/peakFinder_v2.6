@@ -232,6 +232,9 @@ export class GpsTracker {
 
     if (this.watchIdNative !== null || this.watchIdWeb !== null) return;
 
+    // In parallelo al tracciamento preciso: posizione rapida per la mappa.
+    void this.quickFix();
+
     // --- STRADA 1: APP NATIVA (CAPACITOR BACKGROUND) ---
     if (isNativeApp()) {
       try {
