@@ -1,16 +1,10 @@
+import { Capacitor } from "@capacitor/core";
+import type { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 import { LIFT_STATION_RADIUS_M } from "./lift-bonus";
 
-/**
- * GpsTracker — tracciamento GPS della giornata sugli sci (solo lato browser).
- *
- * Distingue le discese reali dalle risalite in impianto:
- *  - Discesa: quota in diminuzione e velocità tra 10 e 75 km/h → i km contano.
- *  - Salita:  quota in aumento → conta un impianto e mette in pausa i km.
- *  - Anti-cheat: oltre 85 km/h il punto viene invalidato.
- *
- * Per la batteria: aggiornamenti solo dopo almeno 10 metri di spostamento
- * oppure ogni 8 secondi.
- */
+// ==========================================
+// INTERFACCE E TIPI
+// ==========================================
 
 export interface GpsPoint {
   latitude: number;
@@ -52,16 +46,36 @@ export interface LiftGeometry {
   status?: "open" | "closed" | "maintenance";
 }
 
+export interface GpsTrackerOptions {
+  onStats: (stats: GpsStats) => void;
+  onPoint?: (point: GpsPoint) => void;
+  onError?: (message: string) => void;
+}
+
+export type GpsPermission = "granted" | "denied" | "prompt" | "unsupported";
+
+// ==========================================
+// COSTANTI E UTILITY
+// ==========================================
+
 export const MIN_DOWNHILL_KMH = 10;
 export const MAX_DOWNHILL_KMH = 75;
 export const CHEAT_KMH = 85;
-/** Alta reattività in pista: nuovo punto ogni 3 metri o ogni secondo. */
+
 const MIN_DISTANCE_M = 3;
 const MIN_INTERVAL_MS = 1000;
 const MIN_ALTITUDE_DELTA_M = 3;
 
 /** Punti Sfida assegnati raccogliendo un Bonus Sfida sulla mappa. */
 export const BONUS_CHALLENGE_POINTS = 100;
+
+export const isNativeApp = (): boolean => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
 
 /** Formula punteggio: km discesa ×100 + impianti ×15 + velocità media ×2 + bonus. */
 export function pvpScore(stats: {
@@ -92,7 +106,6 @@ const haversineM = (a: { lat: number; lng: number }, b: { lat: number; lng: numb
   return 2 * R * Math.asin(Math.sqrt(h));
 };
 
-/** Distanza approssimata da una polilinea (in metri). */
 function distanceToLineM(p: { lat: number; lng: number }, line: Array<[number, number]>) {
   let min = Infinity;
   for (const [lat, lng] of line) {
@@ -102,26 +115,52 @@ function distanceToLineM(p: { lat: number; lng: number }, line: Array<[number, n
   return min;
 }
 
-function distanceMeters(a: GeolocationCoordinates, b: GeolocationCoordinates) {
-  const R = 6371000;
-  const toRad = (v: number) => (v * Math.PI) / 180;
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLng = toRad(b.longitude - a.longitude);
-  const lat1 = toRad(a.latitude);
-  const lat2 = toRad(b.latitude);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
+function distanceBetweenCoords(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number }
+) {
+  return haversineM(
+    { lat: a.latitude, lng: a.longitude },
+    { lat: b.latitude, lng: b.longitude }
+  );
 }
 
-export interface GpsTrackerOptions {
-  onStats: (stats: GpsStats) => void;
-  onPoint?: (point: GpsPoint) => void;
-  onError?: (message: string) => void;
+/** Richiede i permessi GPS (inclusi quelli nativi/background se su iOS/Android). */
+export async function requestGpsPermission(): Promise<GpsPermission> {
+  if (isNativeApp()) {
+    try {
+      const { Geolocation } = await import("@capacitor/geolocation");
+      const res = await Geolocation.requestPermissions();
+      if (res.location === "granted") return "granted";
+      if (res.location === "denied") return "denied";
+      return "prompt";
+    } catch {
+      return "unsupported";
+    }
+  }
+
+  if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+    return "unsupported";
+  }
+
+  return new Promise<GpsPermission>((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      () => resolve("granted"),
+      (err) => resolve(err.code === err.PERMISSION_DENIED ? "denied" : "prompt"),
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  });
 }
+
+// ==========================================
+// CLASSE GPSTRACKER UNIFICATA
+// ==========================================
 
 export class GpsTracker {
-  private watchId: number | null = null;
-  private last: { coords: GeolocationCoordinates; at: number } | null = null;
+  private watchIdNative: string | null = null;
+  private watchIdWeb: number | null = null;
+  private last: { coords: { latitude: number; longitude: number; altitude: number | null; speed: number | null }; at: number } | null = null;
+  
   private downhillKm = 0;
   private lifts = 0;
   private speedSum = 0;
@@ -141,29 +180,97 @@ export class GpsTracker {
     this.options.onStats(this.stats());
   }
 
-  get supported() {
-    return typeof navigator !== "undefined" && "geolocation" in navigator;
+  get supported(): boolean {
+    return isNativeApp() || (typeof navigator !== "undefined" && "geolocation" in navigator);
   }
 
-  start() {
+  /** Avvia il tracciamento (Nativo in Background o Web standard). */
+  async start() {
     if (!this.supported) {
       this.options.onError?.("Il GPS non è disponibile su questo dispositivo.");
       return;
     }
-    if (this.watchId !== null) return;
-    this.watchId = navigator.geolocation.watchPosition(
-      (pos) => this.handle(pos),
-      (err) => this.options.onError?.(err.message || "Impossibile leggere la posizione."),
-      // Massima precisione e nessuna posizione riciclata dalla cache: servono
-      // per seguire i cambi di direzione veloci sugli sci.
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 },
-    );
+
+    if (this.watchIdNative !== null || this.watchIdWeb !== null) return;
+
+    // --- STRADA 1: APP NATIVA (CAPACITOR BACKGROUND) ---
+    if (isNativeApp()) {
+      try {
+        const permResult = await requestGpsPermission();
+        if (permResult !== "granted") {
+          this.options.onError?.("Permesso GPS negato. Attivalo nelle impostazioni del dispositivo.");
+          return;
+        }
+
+        const { registerPlugin } = await import("@capacitor/core");
+        const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
+
+        this.watchIdNative = await BackgroundGeolocation.addWatcher(
+          {
+            backgroundMessage: "Tracciamento discesa in corso...",
+            backgroundTitle: "PeakFinder PvP",
+            requestPermissions: true,
+            stale: false,
+            distanceFilter: MIN_DISTANCE_M,
+          },
+          (location, error) => {
+            if (error) {
+              this.options.onError?.(error.message ?? "Errore lettura GPS background.");
+              return;
+            }
+            if (!location) return;
+
+            this.handleRawPosition(
+              {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                altitude: location.altitude ?? null,
+                speed: location.speed ?? null, // m/s dal sensore
+              },
+              location.time ?? Date.now()
+            );
+          }
+        );
+      } catch (err: any) {
+        this.options.onError?.("Impossibile avviare il GPS nativo: " + (err.message || err));
+      }
+    } 
+    // --- STRADA 2: BROWSER WEB (FALLBACK) ---
+    else {
+      this.watchIdWeb = navigator.geolocation.watchPosition(
+        (pos) => {
+          this.handleRawPosition(
+            {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              altitude: pos.coords.altitude ?? null,
+              speed: pos.coords.speed ?? null,
+            },
+            pos.timestamp
+          );
+        },
+        (err) => this.options.onError?.(err.message || "Impossibile leggere la posizione."),
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+      );
+    }
   }
 
-  stop() {
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
-      this.watchId = null;
+  /** Interrompe il tracciamento. */
+  async stop() {
+    if (this.watchIdNative !== null) {
+      try {
+        const { registerPlugin } = await import("@capacitor/core");
+        const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
+        await BackgroundGeolocation.removeWatcher({ id: this.watchIdNative });
+      } catch {
+        /* silenziato se il watcher era già stato chiuso */
+      }
+      this.watchIdNative = null;
+    }
+
+    if (this.watchIdWeb !== null) {
+      navigator.geolocation.clearWatch(this.watchIdWeb);
+      this.watchIdWeb = null;
     }
   }
 
@@ -187,8 +294,11 @@ export class GpsTracker {
     };
   }
 
-  /** Elabora una posizione: usato dal GPS reale e dai test simulati. */
-  handlePosition(coords: GeolocationCoordinates, timestamp: number) {
+  /** Normalizza l'elaborazione dei punti sia da Web che da Native */
+  private handleRawPosition(
+    coords: { latitude: number; longitude: number; altitude: number | null; speed: number | null },
+    timestamp: number
+  ) {
     const prev = this.last;
     if (!prev) {
       this.last = { coords, at: timestamp };
@@ -196,17 +306,22 @@ export class GpsTracker {
       return;
     }
 
-    const meters = distanceMeters(prev.coords, coords);
+    const meters = distanceBetweenCoords(prev.coords, coords);
     const elapsed = timestamp - prev.at;
+
     if (meters < MIN_DISTANCE_M && elapsed < MIN_INTERVAL_MS) return;
 
     const seconds = Math.max(elapsed / 1000, 1);
+    
+    // Convertiamo la velocità in km/h (il sensore la fornisce in m/s)
     const kmh =
-      coords.speed != null && coords.speed >= 0 ? coords.speed * 3.6 : (meters / seconds) * 3.6;
+      coords.speed != null && coords.speed >= 0 
+        ? coords.speed * 3.6 
+        : (meters / seconds) * 3.6;
 
     this.last = { coords, at: timestamp };
 
-    // Anti-cheat
+    // Anti-cheat: oltre gli 85 km/h il punto viene scartato
     if (kmh > CHEAT_KMH) {
       this.currentSpeed = 0;
       this.options.onStats(this.stats());
@@ -222,6 +337,8 @@ export class GpsTracker {
     if (kmh > this.maxSpeed) this.maxSpeed = kmh;
 
     let isDownhill = false;
+
+    // Discesa
     if (altDelta < -MIN_ALTITUDE_DELTA_M && kmh >= MIN_DOWNHILL_KMH && kmh <= MAX_DOWNHILL_KMH) {
       isDownhill = true;
       this.mode = "downhill";
@@ -230,32 +347,49 @@ export class GpsTracker {
       this.descentM += Math.abs(altDelta);
       this.speedSum += kmh;
       this.speedCount += 1;
-    } else if (altDelta > MIN_ALTITUDE_DELTA_M) {
+    } 
+    // Risalita (Impianto)
+    else if (altDelta > MIN_ALTITUDE_DELTA_M) {
       this.mode = "lift";
       if (!this.liftOpen) {
         this.liftOpen = true;
         this.lifts += 1;
       }
-    } else {
+    } 
+    // Fermo / Inattivo
+    else {
       this.mode = "idle";
     }
 
     this.options.onPoint?.({
       latitude: coords.latitude,
       longitude: coords.longitude,
-      altitude: coords.altitude ?? null,
+      altitude: coords.altitude,
       speed: Math.round(kmh * 10) / 10,
       isDownhill,
     });
+
     this.options.onStats(this.stats());
   }
 
-  private handle(pos: GeolocationPosition) {
-    this.handlePosition(pos.coords, pos.timestamp);
+  /** Compatibilità per test simulati o input manuali */
+  handlePosition(coords: GeolocationCoordinates, timestamp: number) {
+    this.handleRawPosition(
+      {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        altitude: coords.altitude ?? null,
+        speed: coords.speed ?? null,
+      },
+      timestamp
+    );
   }
 }
 
-/** Stato di risalita su un singolo impianto. */
+// ==========================================
+// RICONOSCIMENTO IMPIANTI (LIFT DETECTION)
+// ==========================================
+
 interface LiftProgress {
   startedAt: number;
   lastAltitude: number | null;
@@ -278,10 +412,9 @@ export function completedLiftIds(): number[] {
 
 /**
  * Riconosce l'uso di un impianto di risalita:
- *  - partenza entro 20 m dalla stazione di valle (`base`);
+ *  - partenza entro LIFT_STATION_RADIUS_M dalla stazione di valle (`base`);
  *  - risalita lungo la geometria con quota in aumento;
- *  - arrivo entro 20 m dalla stazione di monte (`top`) ⇒ impianto completato.
- * Restituisce l'impianto appena completato, altrimenti null.
+ *  - arrivo entro LIFT_STATION_RADIUS_M dalla stazione di monte (`top`) ⇒ impianto completato.
  */
 export function detectLiftUsage(
   currentGpsPoint: { latitude: number; longitude: number; altitude?: number | null },
