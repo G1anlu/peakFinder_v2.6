@@ -341,6 +341,8 @@ export class GpsTracker {
     coords: { latitude: number; longitude: number; altitude: number | null; speed: number | null },
     timestamp: number
   ) {
+    // Primo punto ad alta precisione: il riposizionamento rapido si disattiva.
+    this.hasPreciseFix = true;
     const prev = this.last;
     if (!prev) {
       this.last = { coords, at: timestamp };
