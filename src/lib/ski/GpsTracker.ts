@@ -49,6 +49,8 @@ export interface LiftGeometry {
 export interface GpsTrackerOptions {
   onStats: (stats: GpsStats) => void;
   onPoint?: (point: GpsPoint) => void;
+  /** Posizione approssimata immediata (rete/celle) per centrare subito la mappa. */
+  onQuickFix?: (position: { lat: number; lng: number }) => void;
   onError?: (message: string) => void;
 }
 
@@ -172,7 +174,44 @@ export class GpsTracker {
   private maxSpeed = 0;
   private descentM = 0;
 
+  /** Diventa true al primo punto ad alta precisione: da lì il fix rapido non serve più. */
+  private hasPreciseFix = false;
+
   constructor(private readonly options: GpsTrackerOptions) {}
+
+  /**
+   * Posizione veloce iniziale: bassa precisione, timeout 3s e cache di 60s,
+   * così la mappa si posiziona subito mentre parte il GPS ad alta precisione.
+   */
+  private async quickFix() {
+    const emit = (lat: number, lng: number) => {
+      if (this.hasPreciseFix) return;
+      this.options.onQuickFix?.({ lat, lng });
+    };
+    try {
+      if (isNativeApp()) {
+        const { Geolocation } = await import("@capacitor/geolocation");
+        const pos = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: false,
+          timeout: 3000,
+          maximumAge: 60000,
+        });
+        emit(pos.coords.latitude, pos.coords.longitude);
+        return;
+      }
+      if (typeof navigator !== "undefined" && "geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => emit(pos.coords.latitude, pos.coords.longitude),
+          () => {
+            /* il fix rapido è best effort */
+          },
+          { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 },
+        );
+      }
+    } catch {
+      /* il fix rapido è best effort */
+    }
+  }
 
   /** Aggiunge Punti Sfida (bonus raccolto sulla mappa). */
   addBonusPoints(points: number = BONUS_CHALLENGE_POINTS) {
@@ -192,6 +231,9 @@ export class GpsTracker {
     }
 
     if (this.watchIdNative !== null || this.watchIdWeb !== null) return;
+
+    // In parallelo al tracciamento preciso: posizione rapida per la mappa.
+    void this.quickFix();
 
     // --- STRADA 1: APP NATIVA (CAPACITOR BACKGROUND) ---
     if (isNativeApp()) {
@@ -299,6 +341,8 @@ export class GpsTracker {
     coords: { latitude: number; longitude: number; altitude: number | null; speed: number | null },
     timestamp: number
   ) {
+    // Primo punto ad alta precisione: il riposizionamento rapido si disattiva.
+    this.hasPreciseFix = true;
     const prev = this.last;
     if (!prev) {
       this.last = { coords, at: timestamp };

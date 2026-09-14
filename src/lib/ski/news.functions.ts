@@ -50,24 +50,71 @@ const FEEDS: Array<{ source: string; url: string; topic?: boolean }> = [
 
 const TOPIC_WORDS = [
   "neve",
+  "nevicat",
   "sci",
   "sciat",
+  "snowboard",
   "montagna",
   "alpi",
+  "alpin",
   "dolomiti",
   "appennin",
   "comprensor",
   "impianti di risalita",
+  "apertura impianti",
   "funivia",
   "seggiovia",
+  "cabinovia",
   "skipass",
   "valanga",
+  "valanghe",
+  "slavina",
   "ghiacciai",
+  "ghiacciaio",
   "rifugio",
+  "bollettino",
+  "innevament",
+  "scialpinis",
+  "soccorso alpino",
+  "vetta",
+  "piste da sci",
 ];
 
-const isMountainNews = (item: SkiNewsItem) =>
-  TOPIC_WORDS.some((w) => `${item.title} ${item.abstract}`.toLowerCase().includes(w));
+/** Cronaca generale e politica: fuori tema. */
+const OFF_TOPIC_WORDS = [
+  "governo",
+  "parlament",
+  "senato",
+  "elezion",
+  "premier",
+  "ministro",
+  "partito",
+  "manovra",
+  "sindaco",
+  "processo",
+  "omicid",
+  "femminicid",
+  "rapina",
+  "arrestat",
+  "droga",
+  "calciomercato",
+  "serie a",
+  "borsa",
+  "guerra",
+  "gaza",
+  "ucraina",
+  "putin",
+  "trump",
+  "meloni",
+  "vaticano",
+  "sanremo",
+];
+
+const isMountainNews = (item: SkiNewsItem) => {
+  const hay = `${item.title} ${item.abstract}`.toLowerCase();
+  if (OFF_TOPIC_WORDS.some((w) => hay.includes(w))) return false;
+  return TOPIC_WORDS.some((w) => hay.includes(w));
+};
 
 
 export interface SkiNewsItem {
@@ -159,7 +206,8 @@ export const fetchSkiNews = createServerFn({ method: "GET" }).handler(async () =
     FEEDS.map(async (f) => {
       const xml = await fetchText(f.url);
       const parsed = xml ? parseFeed(xml, f.source) : [];
-      return f.topic ? parsed.filter(isMountainNews) : parsed;
+      // Filtro montagna su tutte le fonti: niente cronaca generale o politica.
+      return parsed.filter(isMountainNews);
 
     }),
   );
@@ -243,7 +291,7 @@ async function newsForResort(resortName: string): Promise<SkiNewsItem[]> {
       abstract: item.abstract.replace(/\s*&nbsp;\s*/g, " ").slice(0, 220),
       resorts: [resortName],
     };
-  });
+  }).filter(isMountainNews);
 
   items.sort(byDateDesc);
   resortCache.set(key, { at: Date.now(), items });

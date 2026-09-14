@@ -29,26 +29,87 @@ export const NEWS_FEEDS: Array<{ source: string; url: string; topic?: boolean }>
   },
 ];
 
+/** Parole chiave della montagna: meteo, neve, valanghe, impianti, eventi alpini, sicurezza. */
 const TOPIC_WORDS = [
   "neve",
+  "nevicat",
   "sci",
   "sciat",
+  "snowboard",
   "montagna",
   "alpi",
+  "alpin",
   "dolomiti",
   "appennin",
   "comprensor",
   "funivia",
   "seggiovia",
+  "cabinovia",
+  "skilift",
+  "impianti di risalita",
+  "apertura impianti",
   "skipass",
   "valanga",
+  "valanghe",
+  "slavina",
   "ghiacciai",
+  "ghiacciaio",
   "rifugio",
   "bollettino",
+  "innevament",
+  "freeride",
+  "scialpinis",
+  "soccorso alpino",
+  "quota",
+  "vetta",
+  "piste da sci",
 ];
 
-const isMountain = (a: FeedArticle) =>
-  TOPIC_WORDS.some((w) => `${a.title} ${a.abstract}`.toLowerCase().includes(w));
+/** Cronaca generale e politica: fuori tema per PeakFinder. */
+const OFF_TOPIC_WORDS = [
+  "governo",
+  "parlament",
+  "senato",
+  "camera dei deputati",
+  "elezion",
+  "premier",
+  "ministro",
+  "partito",
+  "sondagg",
+  "manovra",
+  "opposizione",
+  "sindaco",
+  "processo",
+  "omicid",
+  "femminicid",
+  "rapina",
+  "arrestat",
+  "spaccio",
+  "droga",
+  "calciomercato",
+  "serie a",
+  "borsa",
+  "spread",
+  "guerra",
+  "gaza",
+  "ucraina",
+  "putin",
+  "trump",
+  "meloni",
+  "papa ",
+  "vaticano",
+  "sanremo",
+  "grande fratello",
+];
+
+/** Tiene solo le notizie di montagna, scartando cronaca generale e politica. */
+export const isMountainArticle = (a: { title: string; abstract: string }) => {
+  const hay = `${a.title} ${a.abstract}`.toLowerCase();
+  if (OFF_TOPIC_WORDS.some((w) => hay.includes(w))) return false;
+  return TOPIC_WORDS.some((w) => hay.includes(w));
+};
+
+const isMountain = (a: FeedArticle) => isMountainArticle(a);
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -168,7 +229,8 @@ export async function collectFeedArticles(): Promise<FeedArticle[]> {
     NEWS_FEEDS.map(async (f) => {
       const xml = await fetchText(f.url);
       const parsed = xml ? parseFeed(xml, f.source) : [];
-      return f.topic ? parsed.filter(isMountain) : parsed;
+      // Filtro montagna su TUTTE le fonti: niente cronaca generale o politica.
+      return parsed.filter(isMountain);
     }),
   );
 
